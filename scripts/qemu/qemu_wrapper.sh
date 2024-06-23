@@ -13,7 +13,7 @@ verlt() {
 qemu=$1
 shift
 qemu_options=$@
-qemu_version=$($qemu --version | head -n 1 | awk '{print $NF}')
+qemu_version=$($qemu --version | head -n 1 | awk '/version/ {print $4}' )
 
 if [[ "$qemu" == *"qemu-system-aarch64"* ]]; then
     if verlt $qemu_version 6.2.0; then
