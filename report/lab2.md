@@ -25,3 +25,55 @@
 ### 思考题二
 
 练习题 2：请在 `init_boot_pt` 函数的 `LAB 2 TODO 1` 处配置内核高地址页表（`boot_ttbr1_l0`、`boot_ttbr1_l1` 和 `boot_ttbr1_l2`），以 2MB 粒度映射。
+
+mmu.c文件函数的这部分的操作主要是，把虚拟地址的低地址、高地址映射到
+
+- 高地址中，我把外设[`KERNEL_VADDR`, `KERNEL_VADDR` + `PERIPHERAL_BASE`]处的地址映射到物理内存中的物理内存（SDRAM）[`PHYSMEM_START`, `PERIPHERAL_BASE`]
+- 高地址中，把的[`KERNEL_VADDR + PERIPHERAL_BASE`, `KERNEL_VADDR + PHYSMEM_END`]处的地址映射到物理内存中的共享外设内存[`PERIPHERAL_BASE`, `PHYSMEM_END`]
+
+```c++
+
+        /* TTBR1_EL1 0-1G */
+        /* LAB 2 TODO 1 BEGIN */
+        /* Step 1: set L0 and L1 page table entry */
+        // `0xffff_ff00_0000_0000`～`0xffff_ffff_ffff_ffff` 为高地址。
+        // 这里KERNEL_VADDR为高地址
+        vaddr = KERNEL_VADDR;
+        boot_ttbr1_l0[GET_L0_INDEX(vaddr)] = ((u64)boot_ttbr1_l1) | IS_TABLE
+                                             | IS_VALID | NG;
+        boot_ttbr1_l1[GET_L1_INDEX(vaddr)] = ((u64)boot_ttbr1_l2) | IS_TABLE
+                                             | IS_VALID | NG;
+
+        /* Step 2: map PHYSMEM_START ~ PERIPHERAL_BASE with 2MB granularity */
+        for (; vaddr < KERNEL_VADDR + PERIPHERAL_BASE; vaddr += SIZE_2M) {
+                boot_ttbr1_l2[GET_L2_INDEX(vaddr)] =
+                        (vaddr - KERNEL_VADDR) /* high mem, va = pa - KERNEL_VADDR */
+                        | UXN /* Unprivileged execute never */
+                        | ACCESSED /* Set access flag */
+                        | NG /* Mark as not global */
+                        | INNER_SHARABLE /* Sharebility */
+                        | NORMAL_MEMORY /* Normal memory */
+                        | IS_VALID;
+        }
+
+        /* Step 2: map PERIPHERAL_BASE ~ PHYSMEM_END with 2MB granularity */
+        vaddr = KERNEL_VADDR + PERIPHERAL_BASE;
+        for (; vaddr < KERNEL_VADDR + PHYSMEM_END; vaddr += SIZE_2M) {
+                boot_ttbr1_l2[GET_L2_INDEX(vaddr)] =
+                        (vaddr - KERNEL_VADDR) /* high mem, va = pa - KERNEL_VADDR */
+                        | UXN /* Unprivileged execute never */
+                        | ACCESSED /* Set access flag */
+                        | NG /* Mark as not global */
+                        | DEVICE_MEMORY /* Device memory */
+                        | IS_VALID;
+        }
+
+        /* LAB 2 TODO 1 END */
+```
+
+### 思考题三
+
+ 思考题 3：请思考在 `init_boot_pt` 函数中为什么还要为低地址配置页表，并尝试验证自己的解释。
+
+在 `init_boot_pt` 函数中保证低地址和高地址都能映射到对应的物理内存。这样在启动MMU后，PC的值会变成MMU开启后的地址+4，配置了低地址页表之后，虚拟地址中的低地址映射到物理地址中数值相等的内存区域，能顺利执行接下来的代码。
+

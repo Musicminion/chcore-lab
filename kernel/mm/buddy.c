@@ -88,6 +88,8 @@ static struct page *get_buddy_chunk(struct phys_mem_pool *pool,
         return virt_to_page((void *)buddy_chunk_addr);
 }
 
+
+// 
 static struct page *split_page(struct phys_mem_pool *pool, u64 order,
                                struct page *page)
 {
@@ -96,7 +98,24 @@ static struct page *split_page(struct phys_mem_pool *pool, u64 order,
          * Hint: Recursively put the buddy of current chunk into
          * a suitable free list.
          */
+        while(page->order != order){
+                int beforeSplitOrder = page->order;
+                struct page *first_page = page;
+                struct page *second_page = page + (1 << (page->order - 1));
+                set_free_page(first_page, beforeSplitOrder - 1);
 
+                list_del(&first_page->node);
+                list_add(&first_page->node, &pool->free_lists[beforeSplitOrder - 1].free_list);
+
+                set_free_page(second_page, order - 1);
+                list_add(&second_page->node, &pool->free_lists[beforeSplitOrder - 1].free_list);
+
+
+                pool->free_lists[beforeSplitOrder].nr_free -= 1;
+                pool->free_lists[beforeSplitOrder - 1].nr_free += 2;
+                page = first_page;
+        }
+        return page;
         /* LAB 2 TODO 2 END */
 }
 
@@ -129,6 +148,7 @@ void buddy_free_pages(struct phys_mem_pool *pool, struct page *page)
          * Hint: Merge the chunk with its buddy and put it into
          * a suitable free list.
          */
+
 
         /* LAB 2 TODO 2 END */
 }
