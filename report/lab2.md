@@ -77,3 +77,25 @@ mmu.c文件函数的这部分的操作主要是，把虚拟地址的低地址、
 
 在 `init_boot_pt` 函数中保证低地址和高地址都能映射到对应的物理内存。这样在启动MMU后，PC的值会变成MMU开启后的地址+4，配置了低地址页表之后，虚拟地址中的低地址映射到物理地址中数值相等的内存区域，能顺利执行接下来的代码。
 
+### 思考题四
+
+思考题 4：请解释 `ttbr0_el1` 与 `ttbr1_el1` 是具体如何被配置的，给出代码位置，并思考页表基地址配置后为何需要ISB指令。
+
+查看代码发现在`kernel/arch/aarch64/boot/raspi3/init/tools.S`里面可以找到ttbr0_el1的代码，实际上boot_ttbr0_l0来源于`kernel/arch/aarch64/boot/raspi3/init/mmu.c`定义的全局变量。
+
+	/* Write ttbr with phys addr of the translation table */
+	/* tool.S:246-250 */
+	adrp    x8, boot_ttbr0_l0
+	msr     ttbr0_el1, x8
+	adrp    x8, boot_ttbr1_l0
+	msr     ttbr1_el1, x8
+	isb
+
+`isb`的作用是：确保当前指令执行完成之前，后面的指令不会得到执行。考虑到CPU的设计，这些汇编指令可能会出现串行的执行流。在配置好页表基地址之前，是万万不可以执行开启MMU的代码。
+
+### 思考题五
+
+
+
+
+
