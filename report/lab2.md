@@ -108,3 +108,4 @@ mmu.c文件函数的这部分的操作主要是，把虚拟地址的低地址、
 ### 思考题六
 
 `get_next_ptp`主要通过`get_pages`得出下一个ptp，并且将其对应地址PAGE_SIZE大小内的空间置0，设置`is_valid`和`is_table`位为1，`next_table_addr`为物理地址右移12位的地址
+
