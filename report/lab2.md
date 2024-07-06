@@ -95,7 +95,16 @@ mmu.c文件函数的这部分的操作主要是，把虚拟地址的低地址、
 
 ### 思考题五
 
+练习题 5：完成 `kernel/mm/buddy.c` 中的 `split_page`、`buddy_get_pages`、`merge_page` 和 `buddy_free_pages` 函数中的 `LAB 2 TODO 2` 部分，其中 `buddy_get_pages` 用于分配指定阶大小的连续物理页，`buddy_free_pages` 用于释放已分配的连续物理页。
 
+提示：
 
+- 可以使用 `kernel/include/common/list.h` 中提供的链表相关函数如 `init_list_head`、`list_add`、`list_del`、`list_entry` 来对伙伴系统中的空闲链表进行操作
+- 可使用 `get_buddy_chunk` 函数获得某个物理内存块的伙伴块
+- 更多提示见代码注释
 
+参考代码。
 
+### 思考题六
+
+`get_next_ptp`主要通过`get_pages`得出下一个ptp，并且将其对应地址PAGE_SIZE大小内的空间置0，设置`is_valid`和`is_table`位为1，`next_table_addr`为物理地址右移12位的地址
