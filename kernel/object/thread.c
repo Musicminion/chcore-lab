@@ -74,9 +74,9 @@ void thread_deinit(void *thread_ptr)
         /* The thread struct itself will be freed in __free_object */
 }
 
-#define PFLAGS2VMRFLAGS(PF)                                       \
-        (((PF)&PF_X ? VMR_EXEC : 0) | ((PF)&PF_W ? VMR_WRITE : 0) \
-         | ((PF)&PF_R ? VMR_READ : 0))
+#define PFLAGS2VMRFLAGS(PF)                                           \
+        (((PF) & PF_X ? VMR_EXEC : 0) | ((PF) & PF_W ? VMR_WRITE : 0) \
+         | ((PF) & PF_R ? VMR_READ : 0))
 
 #define OFFSET_MASK (0xFFF)
 
@@ -102,13 +102,30 @@ static u64 load_binary(struct cap_group *cap_group, struct vmspace *vmspace,
         }
 
         /* load each segment in the elf binary */
+        // 加载elf二进制文件中的每个段
         for (i = 0; i < elf->header.e_phnum; ++i) {
                 pmo_cap[i] = -1;
                 if (elf->p_headers[i].p_type == PT_LOAD) {
                         seg_sz = elf->p_headers[i].p_memsz;
                         p_vaddr = elf->p_headers[i].p_vaddr;
                         /* LAB 3 TODO BEGIN */
+                        // program
 
+                        // 算出seg_map_sz，需要以页为粒度去映射，因此需要调用ROUND_UP和ROUND_DOWN
+                        seg_map_sz = ROUND_UP(seg_sz + p_vaddr, PAGE_SIZE)
+                                     - ROUND_DOWN(p_vaddr, PAGE_SIZE);
+
+                        // 创建pmo
+                        pmo_cap[i] = create_pmo(
+                                seg_map_sz, PMO_DATA, cap_group, &pmo);
+
+                        memcpy(phys_to_virt(pmo->start) + (p_vaddr - ROUND_DOWN(p_vaddr, PAGE_SIZE)), 
+                                bin + elf->p_headers[i].p_offset, 
+                                elf->p_headers[i].p_filesz);
+                        // headers中获取flags（调用PFLAGS2VMRFLAGS将其转化为vmr_flags_t类型）
+                        flags = PFLAGS2VMRFLAGS(elf->p_headers[i].p_flags);
+                        ret = vmspace_map_range(
+                                vmspace, p_vaddr, seg_map_sz, flags, pmo);
                         /* LAB 3 TODO END */
                         BUG_ON(ret != 0);
                 }

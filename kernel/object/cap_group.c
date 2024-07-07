@@ -67,10 +67,25 @@ out_fail:
         return r;
 }
 
+
+// 初始化cap_group的函数 size是slot_table的大小 pid是进程的pid
+// 初始化slot_table，thread_list，thread_cnt，pid
 int cap_group_init(struct cap_group *cap_group, unsigned int size, u64 pid)
 {
         struct slot_table *slot_table = &cap_group->slot_table;
         /* LAB 3 TODO BEGIN */
+
+        // Initialize the slot table of the cap_group
+        slot_table_init(slot_table, size);
+
+        // Initialize the thread list of the cap_group
+        init_list_head(&cap_group->thread_list);
+
+        // Initialize the thread count of the cap_group
+        cap_group->thread_cnt = 0;
+
+        // Set the pid of the cap_group
+        cap_group->pid = pid;
 
         /* LAB 3 TODO END */
         return 0;
@@ -219,6 +234,7 @@ void obj_put(void *obj)
         }
 }
 
+// 用于创建一个新的cap_group
 int sys_create_cap_group(u64 pid, u64 cap_group_name, u64 name_len, u64 pcid)
 {
         struct cap_group *new_cap_group;
@@ -231,8 +247,7 @@ int sys_create_cap_group(u64 pid, u64 cap_group_name, u64 name_len, u64 pcid)
         }
         /* LAB 3 TODO BEGIN */
         /* cap current cap_group */
-
-
+        new_cap_group = obj_alloc(TYPE_CAP_GROUP, sizeof(struct cap_group));
         /* LAB 3 TODO END */
 
         if (!new_cap_group) {
@@ -240,7 +255,8 @@ int sys_create_cap_group(u64 pid, u64 cap_group_name, u64 name_len, u64 pcid)
                 goto out_fail;
         }
         /* LAB 3 TODO BEGIN */
-
+        // 2：表示cap_group和vmspace本身这两个本身也算作所谓的资源
+        cap_group_init(new_cap_group, 2, pid);
         /* LAB 3 TODO END */
 
         cap = cap_alloc(current_cap_group, new_cap_group, 0);
@@ -259,7 +275,7 @@ int sys_create_cap_group(u64 pid, u64 cap_group_name, u64 name_len, u64 pcid)
 
         /* 2st cap is vmspace */
         /* LAB 3 TODO BEGIN */
-
+        vmspace = obj_alloc(TYPE_VMSPACE, sizeof(struct vmspace));
         /* LAB 3 TODO END */
         if (!vmspace) {
                 r = -ENOMEM;
@@ -303,20 +319,27 @@ struct cap_group *create_root_cap_group(char *name, size_t name_len)
         struct vmspace *vmspace;
         int slot_id;
         /* LAB 3 TODO BEGIN */
+        cap_group = obj_alloc(TYPE_CAP_GROUP, sizeof(struct cap_group));
 
         /* LAB 3 TODO END */
         BUG_ON(!cap_group);
         /* LAB 3 TODO BEGIN */
+        cap_group_init(cap_group, 2, ROOT_PID);
+        slot_id = cap_alloc(cap_group, cap_group, 0);
 
         /* LAB 3 TODO END */
         BUG_ON(slot_id != CAP_GROUP_OBJ_ID);
         /* LAB 3 TODO BEGIN */
+        vmspace = obj_alloc(TYPE_VMSPACE, sizeof(struct vmspace));
 
         /* LAB 3 TODO END */
         BUG_ON(!vmspace);
 
         /* fixed PCID 1 for root process, PCID 0 is not used. */
         /* LAB 3 TODO BEGIN */
+        vmspace->pcid = ROOT_PCID;
+        vmspace_init(vmspace);
+        slot_id = cap_alloc(cap_group, vmspace, 0);
 
         /* LAB 3 TODO END */
         BUG_ON(slot_id != VMSPACE_OBJ_ID);
