@@ -35,6 +35,7 @@ int handle_trans_fault(struct vmspace *vmspace, vaddr_t fault_addr)
         u64 index;
         int ret = 0;
 
+        // 首先需要找到出现 fault 的地址所对应的 vmr，如果 vmr 不存在，那么将终止处理流程。
         vmr = find_vmr_for_va(vmspace, fault_addr);
         if (vmr == NULL) {
                 printk("handle_trans_fault: no vmr found for va 0x%lx!\n",
@@ -66,14 +67,20 @@ int handle_trans_fault(struct vmspace *vmspace, vaddr_t fault_addr)
                 index = offset / PAGE_SIZE;
 
                 fault_addr = ROUND_DOWN(fault_addr, PAGE_SIZE);
-                /* LAB 3 TODO BEGIN */
 
+                /* LAB 3 TODO BEGIN */
+                pa = get_page_from_pmo(pmo, index);
                 /* LAB 3 TODO END */
+
                 if (pa == 0) {
                         /* Not committed before. Then, allocate the physical
                          * page. */
                         /* LAB 3 TODO BEGIN */
-
+                        vaddr_t va = get_pages(0);
+                        memset((void *)va, 0, PAGE_SIZE);
+                        pa = virt_to_phys(va);
+                        commit_page_to_pmo(pmo, index, pa);
+                        map_range_in_pgtbl(vmspace->pgtbl, fault_addr, pa, PAGE_SIZE, perm);
                         /* LAB 3 TODO END */
 #ifdef CHCORE_LAB3_TEST
                         printk("Test: Test: Successfully map for pa 0\n");
@@ -101,7 +108,7 @@ int handle_trans_fault(struct vmspace *vmspace, vaddr_t fault_addr)
                          * Repeated mapping operations are harmless.
                          */
                         /* LAB 3 TODO BEGIN */
-
+                        map_range_in_pgtbl(vmspace->pgtbl, fault_addr, pa, PAGE_SIZE, perm);
                         /* LAB 3 TODO END */
 #ifdef CHCORE_LAB3_TEST
                         printk("Test: Test: Successfully map for pa not 0\n");

@@ -75,9 +75,9 @@ void thread_deinit(void *thread_ptr)
         /* The thread struct itself will be freed in __free_object */
 }
 
-#define PFLAGS2VMRFLAGS(PF)                                       \
-        (((PF)&PF_X ? VMR_EXEC : 0) | ((PF)&PF_W ? VMR_WRITE : 0) \
-         | ((PF)&PF_R ? VMR_READ : 0))
+#define PFLAGS2VMRFLAGS(PF)                                           \
+        (((PF) & PF_X ? VMR_EXEC : 0) | ((PF) & PF_W ? VMR_WRITE : 0) \
+         | ((PF) & PF_R ? VMR_READ : 0))
 
 #define OFFSET_MASK (0xFFF)
 
@@ -88,10 +88,21 @@ static u64 load_binary(struct cap_group *cap_group, struct vmspace *vmspace,
         struct elf_file *elf;
         vmr_prop_t flags;
         int i, r;
+
+        // seg_sz是用来存储当前for循环迭代段的时候
+        // 在虚拟内存中，当前段的大小
+        // seg_map_sz是用来存储当前for循环迭代段的时候
+        // 在物理内存中，映射后整个段按需要分配的页数对应的大小
+        // 毕竟每个段开始的地址不一定是页对齐的,所以会出现
+        // seg_map_sz > seg_sz的情况
         size_t seg_sz, seg_map_sz;
+
+        // p_vaddr是用来存储当前for循环迭代段的时候
+        // 在虚拟内存中，当前段的起始地址
         u64 p_vaddr;
 
         int *pmo_cap;
+
         struct pmobject *pmo;
         u64 ret;
 
@@ -103,13 +114,39 @@ static u64 load_binary(struct cap_group *cap_group, struct vmspace *vmspace,
         }
 
         /* load each segment in the elf binary */
+        // 加载elf二进制文件中的每个段
+        // e_phnum是段表的数量
         for (i = 0; i < elf->header.e_phnum; ++i) {
                 pmo_cap[i] = -1;
                 if (elf->p_headers[i].p_type == PT_LOAD) {
                         seg_sz = elf->p_headers[i].p_memsz;
                         p_vaddr = elf->p_headers[i].p_vaddr;
                         /* LAB 3 TODO BEGIN */
+                        // 算出seg_map_sz，当前的segmeent在物理内存中的大小
+                        // 需要以页为粒度去映射，因此需要调用ROUND_UP和ROUND_DOWN
+                        seg_map_sz = ROUND_UP(seg_sz + p_vaddr, PAGE_SIZE)
+                                     - ROUND_DOWN(p_vaddr, PAGE_SIZE);
 
+                        // 创建pmo物理内存对象
+                        pmo_cap[i] = create_pmo(
+                                seg_map_sz, PMO_DATA, cap_group, &pmo);
+
+                        // 内存拷贝的目的地址
+                        void *memcpy_dst =
+                                phys_to_virt(pmo->start)
+                                + (p_vaddr - ROUND_DOWN(p_vaddr, PAGE_SIZE));
+                        // 内存拷贝的原地址
+                        void *memcpy_src = bin + elf->p_headers[i].p_offset;
+                        
+                        // 必须是p_filesz，因为p_filesz是文件中的大小，对于bss段来说，p_filesz是0
+                        memcpy(memcpy_dst,
+                               memcpy_src,
+                               elf->p_headers[i].p_filesz);
+                        
+                        // headers中获取flags（调用PFLAGS2VMRFLAGS将其转化为vmr_flags_t类型）
+                        flags = PFLAGS2VMRFLAGS(elf->p_headers[i].p_flags);
+                        ret = vmspace_map_range(
+                                vmspace, p_vaddr, seg_map_sz, flags, pmo);
                         /* LAB 3 TODO END */
                         BUG_ON(ret != 0);
                 }
@@ -399,7 +436,8 @@ void sys_thread_exit(void)
         printk("\nBack to kernel.\n");
 #endif
         /* LAB 3 TODO BEGIN */
-
+        current_thread->thread_ctx->thread_exit_state = TE_EXITED;
+        thread_deinit(current_thread);
         /* LAB 3 TODO END */
         /* Reschedule */
         sched();
