@@ -49,6 +49,14 @@ out_fail:
         return r;
 }
 
+// size: 要创建的 PMO 的大小
+// type: PMO 的类型：
+// #define PMO_ANONYM       0 /* lazy allocation */
+// #define PMO_DATA         1 /* immediate allocation */
+// #define PMO_SHM          3 /* shared memory */
+// #define PMO_DEVICE       5 /* memory mapped device registers */
+// #define PMO_DATA_NOCACHE 6 /* non-cacheable immediate allocation */
+// pmobject: 用于返回创建的 PMO
 int create_pmo(u64 size, u64 type, struct cap_group *cap_group,
                struct pmobject **new_pmo)
 {
@@ -530,6 +538,9 @@ fail1:
 /*
  * Initialize an allocated pmobject.
  * @paddr is only used when @type == PMO_DEVICE.
+ * 当 PMO_DATA 时:
+ * pmo_init 分配了一坨内存，然后把这个虚拟内存的地址转化为物理内存的地址
+ * 然后把这个物理内存的地址赋值给 pmo->start
  */
 int pmo_init(struct pmobject *pmo, pmo_type_t type, size_t len, paddr_t paddr)
 {

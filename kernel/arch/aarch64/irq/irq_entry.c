@@ -46,6 +46,7 @@ void arch_interrupt_init(void)
         memset(irq_handle_type, HANDLE_KERNEL, MAX_IRQ_NUM);
 }
 
+
 void handle_entry_c(int type, u64 esr, u64 address)
 {
         /* ec: exception class */

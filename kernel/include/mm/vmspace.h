@@ -54,9 +54,9 @@ typedef u64 pmo_type_t;
 // 进程内存对象，用于记录进程的内存信息
 struct pmobject {
         struct radix *radix; /* record physical pages */
-        paddr_t start;
-        size_t size;
-        pmo_type_t type;
+        paddr_t start; /* 开始的物理地址 */
+        size_t size; /* 物理内存对象的大小 */
+        pmo_type_t type; /* 物理内存对象的类型 */
 };
 
 struct cap_group;

@@ -25,6 +25,7 @@
 .endm
 
 /* See more details a1bout the bias in registers.h */
+/* 这一部分的代码主要是用于在进入异常之前，保存寄存器的代码 */
 .macro	exception_enter
 	/* LAB 3 TODO BEGIN */
 	sub	sp, sp, #ARCH_EXEC_CONT_SIZE
@@ -111,21 +112,22 @@
 .align	11
 EXPORT(el1_vector)
 /* LAB 3 TODO BEGIN */
+	/* 异常发生时处理器状态ELx使用 SP_EL0 作为SP */
 	exception_entry sync_el1t
 	exception_entry irq_el1t
 	exception_entry fiq_el1t
 	exception_entry error_el1t
-
+	/* 异常发生时处理器状态ELx使用 SP_ELx 作为SP */
 	exception_entry sync_el1h
 	exception_entry irq_el1h
 	exception_entry fiq_el1h
 	exception_entry error_el1h
-
+	/* EL0 运行于 AArch64 状态 */
 	exception_entry sync_el0_64
 	exception_entry irq_el0_64
 	exception_entry fiq_el0_64
 	exception_entry error_el0_64
-
+	/* EL0 运行于 AArch32 状态 */
 	exception_entry sync_el0_32
 	exception_entry irq_el0_32
 	exception_entry fiq_el0_32

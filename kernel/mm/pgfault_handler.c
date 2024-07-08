@@ -35,6 +35,7 @@ int handle_trans_fault(struct vmspace *vmspace, vaddr_t fault_addr)
         u64 index;
         int ret = 0;
 
+        // 首先需要找到出现 fault 的地址所对应的 vmr，如果 vmr 不存在，那么将终止处理流程。
         vmr = find_vmr_for_va(vmspace, fault_addr);
         if (vmr == NULL) {
                 printk("handle_trans_fault: no vmr found for va 0x%lx!\n",
@@ -66,10 +67,11 @@ int handle_trans_fault(struct vmspace *vmspace, vaddr_t fault_addr)
                 index = offset / PAGE_SIZE;
 
                 fault_addr = ROUND_DOWN(fault_addr, PAGE_SIZE);
+
                 /* LAB 3 TODO BEGIN */
                 pa = get_page_from_pmo(pmo, index);
-
                 /* LAB 3 TODO END */
+
                 if (pa == 0) {
                         /* Not committed before. Then, allocate the physical
                          * page. */
