@@ -22,6 +22,8 @@ volatile char cpu_status[PLAT_CPU_NUM] = {cpu_hang};
 
 u64 ctr_el0;
 
+
+// 主CPU激活各个其他CPU的函数
 void enable_smp_cores(paddr_t boot_flag)
 {
         int i = 0;
@@ -30,25 +32,36 @@ void enable_smp_cores(paddr_t boot_flag)
         /* Set current cpu status */
         cpu_status[smp_get_cpu_id()] = cpu_run;
         secondary_boot_flag = (long *)phys_to_virt(boot_flag);
+
+        // 遍历所有的CPU
         for (i = 0; i < PLAT_CPU_NUM; i++) {
                 /* Lab4
                  * You should set one flag to enable the APs to continue in
                  * _start. Then, what's the flag?
                  */
                 /* LAB 4 TODO BEGIN */
-
+                // 全设置为1，表示所有CPU都可以继续执行，不会卡在死循环
+                secondary_boot_flag[i] = 1;
                 /* LAB 4 TODO END */
 
+                // 刷新数据缓存，确保secondary_boot_flag数组的更改对所有处理器可见。
                 flush_dcache_area((u64)secondary_boot_flag,
                                   (u64)sizeof(u64) * PLAT_CPU_NUM);
+
+                //   执行一个“数据同步屏障”（Data Synchronization
+                //   Barrier）操作，确保所有处理器看到的内存操作顺序是一致的。
                 asm volatile("dsb sy");
 
                 /* Lab4
                  * The BSP waits for the currently initializing AP finishing
                  * before activating the next one
+                 * cpu_run = 1
                  */
+                // 等待各个CPU的初始化进程完成
+                // 状态为run的CPU表示已经初始化完成
                 /* LAB 4 TODO BEGIN */
-
+                while (secondary_boot_flag[i] != cpu_run)
+                        ;
                 /* LAB 4 TODO END */
                 if (cpu_status[i] == cpu_run)
                         kinfo("CPU %d is active\n", i);
