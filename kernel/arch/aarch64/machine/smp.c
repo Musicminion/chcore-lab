@@ -60,7 +60,7 @@ void enable_smp_cores(paddr_t boot_flag)
                 // 等待各个CPU的初始化进程完成
                 // 状态为run的CPU表示已经初始化完成
                 /* LAB 4 TODO BEGIN */
-                while (secondary_boot_flag[i] != cpu_run)
+                while (cpu_status[i] != cpu_run)
                         ;
                 /* LAB 4 TODO END */
                 if (cpu_status[i] == cpu_run)
