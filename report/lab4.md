@@ -97,3 +97,15 @@ void enable_smp_cores(paddr_t boot_flag)
 > 3. 在适当的位置调用`lock_kernel`。
 > 4. 判断什么时候需要放锁，添加`unlock_kernel`。（注意：由于这里需要自行判断，没有在需要添加的代码周围插入TODO注释）
 
+### 思考题5
+
+> 思考题 5：在`el0_syscall`调用`lock_kernel`时，在栈上保存了寄存器的值。这是为了避免调用`lock_kernel`时修改这些寄存器。在`unlock_kernel`时，是否需要将寄存器的值保存到栈中，试分析其原因。
+
+不需要保存到栈中，因为`unlock_kernel`只是修改了`lock->owner`这个存储在内存的值，不会涉及到对寄存器的修改。
+
+### 思考题6
+
+> 思考题 6：为何`idle_threads`不会加入到等待队列中？请分析其原因？
+
+idle_threads属于空转循环，只会浪费CPU资源。没有必要假如等待序列中。
+

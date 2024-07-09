@@ -127,7 +127,6 @@ int rr_sched(void)
         /* LAB 4 TODO BEGIN */
 
         /* LAB 4 TODO END */
-
         return 0;
 }
 
