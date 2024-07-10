@@ -84,7 +84,7 @@ int rr_sched_enqueue(struct thread *thread)
 
         // 将线程添加到对应CPU的就绪队列中
         list_append(&thread->ready_queue_node,
-                      &rr_ready_queue_meta[thread->thread_ctx->affinity].queue_head);
+                      &rr_ready_queue_meta[cpu_id].queue_head);
         rr_ready_queue_meta[cpu_id].queue_len++;
         thread->thread_ctx->state = TS_READY;
         thread->thread_ctx->cpuid = cpu_id;
@@ -187,8 +187,6 @@ int rr_sched(void)
                 current_thread->thread_ctx->state == TS_EXIT;
                 current_thread->thread_ctx->thread_exit_state == TE_EXITED;
         } else if (current_thread->thread_ctx->state != TS_WAITING) {
-                /* If budget != 0 & aff == cpuid, do not change current_thread
-                 */
                 if (current_thread->thread_ctx->sc->budget != 0
                     && (current_thread->thread_ctx->affinity == smp_get_cpu_id()
                         || current_thread->thread_ctx->affinity == -1)) {

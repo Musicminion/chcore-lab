@@ -436,8 +436,8 @@ void sys_thread_exit(void)
         printk("\nBack to kernel.\n");
 #endif
         /* LAB 3 TODO BEGIN */
-        current_thread->thread_ctx->thread_exit_state = TE_EXITED;
-        thread_deinit(current_thread);
+        current_thread->thread_ctx->thread_exit_state = TE_EXITING;
+        // thread_deinit(current_thread);
         /* LAB 3 TODO END */
         /* Reschedule */
         sched();
@@ -474,7 +474,7 @@ int sys_set_affinity(u64 thread_cap, s32 aff)
         }
 
         /* LAB 4 TODO BEGIN */
-
+        thread->thread_ctx->affinity = aff;
         /* LAB 4 TODO END */
         if (thread_cap != -1)
                 obj_put((void *)thread);
@@ -497,7 +497,7 @@ s32 sys_get_affinity(u64 thread_cap)
         if (thread == NULL)
                 return -ECAPBILITY;
         /* LAB 4 TODO BEGIN */
-
+        aff = thread->thread_ctx->affinity;
         /* LAB 4 TODO END */
 
         if (thread_cap != -1)

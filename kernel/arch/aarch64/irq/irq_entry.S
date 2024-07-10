@@ -224,7 +224,6 @@ el0_syscall:
 
 	/* Ret from syscall */
 	str	x0, [sp]
-	/* 添加unlock 内核 */
 	bl unlock_kernel
 	exception_exit
 
@@ -248,7 +247,6 @@ error_el0_32:
 BEGIN_FUNC(__eret_to_thread)
 	mov	sp, x0
 	dmb ish
-	/* 添加unlock 内核 */
 	bl unlock_kernel
 	exception_exit
 END_FUNC(__eret_to_thread)
