@@ -18,7 +18,9 @@
 
 #define ALIGN(n) __attribute__((__aligned__(n)))
 
+// 这个ROUND_UP宏用于将给定的数x向上舍入到最近的n的倍数
 #define ROUND_UP(x, n)     (((x) + (n)-1) & ~((n)-1))
+// 这个ROUND_DOWN宏用于将给定的数x向下舍入到最近的n的倍数
 #define ROUND_DOWN(x, n)   ((x) & ~((n)-1))
 #define DIV_ROUND_UP(n, d) (((n) + (d)-1) / (d))
 

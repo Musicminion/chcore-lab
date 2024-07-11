@@ -97,6 +97,7 @@ u32 nb_uart_recv(void)
                 return NB_UART_NRET;
 }
 
+// 通过 UART（通用异步接收/发送器）发送一个 32 位的数据。
 void uart_send(u32 c)
 {
         while (1) {

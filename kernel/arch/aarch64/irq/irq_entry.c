@@ -46,11 +46,12 @@ void arch_interrupt_init(void)
         memset(irq_handle_type, HANDLE_KERNEL, MAX_IRQ_NUM);
 }
 
+
 void handle_entry_c(int type, u64 esr, u64 address)
 {
         /* Acquire the big kernel lock, if the exception is not from kernel */
         /* LAB 4 TODO BEGIN */
-
+        if (type >= SYNC_EL0_64) lock_kernel();
         /* LAB 4 TODO END */
 
         /* ec: exception class */
@@ -157,7 +158,7 @@ void handle_irq(int type)
         if (type >= SYNC_EL0_64
             || current_thread->thread_ctx->type == TYPE_IDLE) {
                 /* LAB 4 TODO BEGIN */
-
+                lock_kernel();
                 /* LAB 4 TODO END */
         }
 
