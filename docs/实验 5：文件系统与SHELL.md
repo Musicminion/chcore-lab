@@ -64,6 +64,7 @@ tmpfs的基本功能在`userland/servers/tmpfs/tmpfs.c` 与 `userland/servers/tm
 > 所有`userland/servers/tmpfs`目录下出现的`fd`，均已经在`fs_server_dispatch`中被转化为`fid`。
 >
 > **注意：本部分测试需要打开`CHCORE_TMPFS_TEST`，即在`.config`文件中如下行选择`ON`。**
+>
 > ```
 > CHCORE_TMPFS_TEST:BOOL=ON
 > ```
@@ -71,6 +72,7 @@ tmpfs的基本功能在`userland/servers/tmpfs/tmpfs.c` 与 `userland/servers/tm
 正确完成以上所有练习后，输入`make grade LAB=5`可以获得30分。
 
 ## 第二部分：SHELL
+
 本实验的第二部分是实现用户态shell，该用户态shell在`userland/servers/shell`中实现。
 
 目前，应用程序只能通过IPC直接将请求发送给文件系统进程，为了更方便地对文件系统进行访问，通常需要先对文件系统接口进行一定的封装。
