@@ -94,16 +94,21 @@ struct elf_header_32 {
         u16 e_shstrndx;
 };
 
+/*
+ * ELF程序头部结构体
+ * 用于描述ELF文件中的程序段的信息
+ */
 struct elf_program_header {
-        u32 p_type;
-        u32 p_flags;
-        u64 p_offset;
-        u64 p_vaddr;
-        u64 p_paddr;
-        u64 p_filesz;
-        u64 p_memsz;
-        u64 p_align;
+        u32 p_type;     // 段类型
+        u32 p_flags;    // 段标志
+        u64 p_offset;   // 段在文件中的偏移量
+        u64 p_vaddr;    // 段在虚拟内存中的起始地址
+        u64 p_paddr;    // 段在物理内存中的起始地址
+        u64 p_filesz;   // 段在文件中的大小
+        u64 p_memsz;    // 段在内存中的大小
+        u64 p_align;    // 段在内存中的对齐方式
 };
+
 struct elf_program_header_32 {
         u32 p_type;
         u32 p_offset;
@@ -115,18 +120,24 @@ struct elf_program_header_32 {
         u32 p_align;
 };
 
+/*
+ * ELF节头部结构体
+ * 用于描述ELF文件中的节段的信息
+ */
 struct elf_section_header {
-        u32 sh_name;
-        u32 sh_type;
-        u64 sh_flags;
-        u64 sh_addr;
-        u64 sh_offset;
-        u64 sh_size;
-        u32 sh_link;
-        u32 sh_info;
-        u64 sh_addralign;
-        u64 sh_entsize;
+        u32 sh_name;        // 节名称在节名称字符串表中的索引
+        u32 sh_type;        // 节类型
+        u64 sh_flags;       // 节标志
+        u64 sh_addr;        // 节在内存中的起始地址
+        u64 sh_offset;      // 节在文件中的偏移量
+        u64 sh_size;        // 节在文件中的大小
+        u32 sh_link;        // 链接到的节的索引
+        u32 sh_info;        // 附加信息
+        u64 sh_addralign;   // 节在内存中的对齐方式
+        u64 sh_entsize;     // 节中每个实体的大小
 };
+
+
 struct elf_section_header_32 {
         u32 sh_name;
         u32 sh_type;
@@ -140,9 +151,15 @@ struct elf_section_header_32 {
         u32 sh_entsize;
 };
 
+// elf 文件结构
 struct elf_file {
+        // elf 文件头部的元数据metadata
         struct elf_header header;
+        // p_headers: program headers 程序头部表
+        // 它是一个数组，用于描述如何将 ELF 文件的不同部分映射到进程的地址空间中。
         struct elf_program_header *p_headers;
+        // s_headers: section headers 节头部表
+        // 它是一个数组，用于描述 ELF 文件的不同部分的布局。
         struct elf_section_header *s_headers;
 };
 

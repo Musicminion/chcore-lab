@@ -30,6 +30,8 @@ struct radix_node {
                 void *values[RADIX_NODE_SIZE];
         };
 };
+
+// radix 结构体在这里定义了一个基数树（Radix Tree）的基本框架。基数树，也称为前缀树或Trie树，是一种用于存储、检索和删除键值对的高效数据结构，特别是当键是字符串或者长整数时。这种数据结构通过共享键的公共前缀来节省空间，从而在许多情况下提供比传统的二叉搜索树更好的性能。
 struct radix {
         struct radix_node *root;
         struct lock radix_lock;

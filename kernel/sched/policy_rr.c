@@ -52,7 +52,7 @@ struct thread idle_threads[PLAT_CPU_NUM];
 
 /*
  * Lab4
- * Sched_enqueue
+ * `sched_enqueue`：将新线程添加到调度器的就绪队列中。
  * Put `thread` at the end of ready queue of assigned `affinity`.
  * If affinity = NO_AFF, assign the core to the current cpu.
  * If the thread is IDLE thread, do nothing!
@@ -61,7 +61,33 @@ struct thread idle_threads[PLAT_CPU_NUM];
 int rr_sched_enqueue(struct thread *thread)
 {
         /* LAB 4 TODO BEGIN */
+        // NULL检查
+        if (thread == NULL || thread->thread_ctx == NULL)
+                return -EINVAL;
+        if (thread->thread_ctx->state == TS_READY)
+                return -EINVAL;
+        // 如果是idle线程，直接返回
+        if (thread->thread_ctx->type == TYPE_IDLE)
+                return 0;
+        // 如果线程的affinity不是NO_AFF，且不在有效范围内，返回错误
+        if (thread->thread_ctx->affinity != NO_AFF &&
+            thread->thread_ctx->affinity >= PLAT_CPU_NUM)
+                return -EINVAL;
 
+        // 如果线程的affinity是NO_AFF，将线程分配到当前CPU
+        s32 aff = thread->thread_ctx->affinity;
+        u32 cpu_id = aff;
+
+        if (aff == NO_AFF){
+                cpu_id = smp_get_cpu_id();
+        }
+
+        // 将线程添加到对应CPU的就绪队列中
+        list_append(&thread->ready_queue_node,
+                      &rr_ready_queue_meta[cpu_id].queue_head);
+        rr_ready_queue_meta[cpu_id].queue_len++;
+        thread->thread_ctx->state = TS_READY;
+        thread->thread_ctx->cpuid = cpu_id;
         /* LAB 4 TODO END */
         return 0;
 }
@@ -75,7 +101,25 @@ int rr_sched_enqueue(struct thread *thread)
 int rr_sched_dequeue(struct thread *thread)
 {
         /* LAB 4 TODO BEGIN */
+        // NULL检查
+        if (thread == NULL || thread->thread_ctx == NULL)
+                return -EINVAL;
+        if (thread->thread_ctx->state != TS_READY)
+                return -EINVAL;
+        // 如果是idle线程，直接返回
+        if (thread->thread_ctx->type == TYPE_IDLE)
+                return -EINVAL;
+        // 如果线程的affinity不是NO_AFF，且不在有效范围内，返回错误
+        if (thread->thread_ctx->affinity != NO_AFF &&
+            thread->thread_ctx->affinity >= PLAT_CPU_NUM)
+                return -EINVAL;
 
+        // 从对应CPU的就绪队列中移除线程
+        s32 cpuid = smp_get_cpu_id();
+        list_del(&thread->ready_queue_node);
+        rr_ready_queue_meta[thread->thread_ctx->cpuid].queue_len--;
+        thread->thread_ctx->cpuid = cpuid;
+        thread->thread_ctx->state = TS_INTER;
         /* LAB 4 TODO END */
         return 0;
 }
@@ -91,7 +135,18 @@ struct thread *rr_sched_choose_thread(void)
 {
         struct thread *thread = NULL;
         /* LAB 4 TODO BEGIN */
-
+        u32 len = rr_ready_queue_meta[smp_get_cpu_id()].queue_len;
+        if (len == 0) {
+                thread = &idle_threads[smp_get_cpu_id()];
+                return thread;
+        } else {
+                thread = list_entry(
+                        rr_ready_queue_meta[smp_get_cpu_id()].queue_head.next,
+                        struct thread,
+                        ready_queue_node);
+                rr_sched_dequeue(thread);
+                return thread;
+        }
         /* LAB 4 TODO END */
         return thread;
 }
@@ -103,7 +158,7 @@ struct thread *rr_sched_choose_thread(void)
 static inline void rr_sched_refill_budget(struct thread *target, u32 budget)
 {
         /* LAB 4 TODO BEGIN */
-
+        target->thread_ctx->sc->budget = budget;
         /* LAB 4 TODO END */
 }
 
@@ -125,9 +180,24 @@ static inline void rr_sched_refill_budget(struct thread *target, u32 budget)
 int rr_sched(void)
 {
         /* LAB 4 TODO BEGIN */
-
+        struct thread *thread = NULL;
+        if (current_thread == NULL || current_thread->thread_ctx == NULL) {
+        } else if (current_thread->thread_ctx->thread_exit_state
+                   == TE_EXITING) {
+                current_thread->thread_ctx->state == TS_EXIT;
+                current_thread->thread_ctx->thread_exit_state == TE_EXITED;
+        } else if (current_thread->thread_ctx->state != TS_WAITING) {
+                if (current_thread->thread_ctx->sc->budget != 0
+                    && (current_thread->thread_ctx->affinity == smp_get_cpu_id()
+                        || current_thread->thread_ctx->affinity == -1)) {
+                        return switch_to_thread(current_thread);
+                } else {
+                        BUG_ON(rr_sched_enqueue(current_thread));
+                        rr_sched_refill_budget(current_thread, DEFAULT_BUDGET);
+                }
+        }
+        switch_to_thread(rr_sched_choose_thread());
         /* LAB 4 TODO END */
-
         return 0;
 }
 

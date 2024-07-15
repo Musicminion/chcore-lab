@@ -64,6 +64,7 @@ tmpfs的基本功能在`userland/servers/tmpfs/tmpfs.c` 与 `userland/servers/tm
 > 所有`userland/servers/tmpfs`目录下出现的`fd`，均已经在`fs_server_dispatch`中被转化为`fid`。
 >
 > **注意：本部分测试需要打开`CHCORE_TMPFS_TEST`，即在`.config`文件中如下行选择`ON`。**
+>
 > ```
 > CHCORE_TMPFS_TEST:BOOL=ON
 > ```
@@ -71,6 +72,7 @@ tmpfs的基本功能在`userland/servers/tmpfs/tmpfs.c` 与 `userland/servers/tm
 正确完成以上所有练习后，输入`make grade LAB=5`可以获得30分。
 
 ## 第二部分：SHELL
+
 本实验的第二部分是实现用户态shell，该用户态shell在`userland/servers/shell`中实现。
 
 目前，应用程序只能通过IPC直接将请求发送给文件系统进程，为了更方便地对文件系统进行访问，通常需要先对文件系统接口进行一定的封装。
@@ -83,6 +85,7 @@ tmpfs的基本功能在`userland/servers/tmpfs/tmpfs.c` 与 `userland/servers/tm
 > 练习题 9：实现在`userland/servers/shell/shell.c`中定义的`run_cmd`，以通过输入文件名来运行可执行文件，同时补全`do_complement`函数并修改`readline`函数，以支持按tab键自动补全根目录（`/`）下的文件名。
 >
 > **注意：本部分测试需要打开`CHCORE_SHELL_TEST`，即在`.config`文件中如下行选择`ON`。**
+>
 > ```
 > CHCORE_SHELL_TEST:BOOL=ON
 > ```
@@ -95,6 +98,7 @@ tmpfs的基本功能在`userland/servers/tmpfs/tmpfs.c` 与 `userland/servers/tm
 
 > 练习题 10：FSM需要两种不同的文件系统才能体现其特点，本实验提供了一个fakefs用于模拟部分文件系统的接口，测试代码会默认将tmpfs挂载到路径`/`，并将fakefs挂载在到路径`/fakefs`。本练习需要实现`userland/server/fsm/main.c`中空缺的部分，使得用户程序将文件系统请求发送给FSM后，FSM根据访问路径向对应文件系统发起请求，并将结果返回给用户程序。实现过程中可以使用`userland/server/fsm`目录下已经实现的函数。
 > **注意：本部分测试需要打开`CHCORE_FSM_TEST`，即在`.config`文件中如下行选择`ON`。**
+>
 > ```
 > CHCORE_FSM_TEST:BOOL=ON
 > ```
