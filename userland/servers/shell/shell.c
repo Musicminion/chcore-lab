@@ -178,10 +178,16 @@ char *readline(const char *prompt)
             printf("\n");
             is_stop = true;
             break;
+        case '\r':
+            buf[i] = '\0';
+            printf("\n");
+            is_stop = true;
+            break;
         case '\t':
             do_complement(buf, complement, ++complement_time);
             printf("%s", complement);
             break;
+        
 
         default:
             buf[i] = c;
